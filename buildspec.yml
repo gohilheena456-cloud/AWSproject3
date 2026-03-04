@@ -1,0 +1,30 @@
+version: 0.2
+
+env:
+  variables:
+    AWS_REGION: ap-south-1
+    BACKEND_REPO_URI: 807772679248.dkr.ecr.ap-south-1.amazonaws.com/backend
+    IMAGE_TAG: latest
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging into ECR...
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $BACKEND_REPO_URI
+
+  build:
+    commands:
+      - echo "Building backend image"
+      - docker build -t backend:$IMAGE_TAG .
+      - docker tag backend:$IMAGE_TAG $BACKEND_REPO_URI:$IMAGE_TAG
+      - cd ..
+
+  post_build:
+    commands:
+      - echo "Pushing backend image..."
+      - docker push $BACKEND_REPO_URI:$IMAGE_TAG
+
+artifacts:
+  files:
+    - appspec.yml
+    - docker.sh
